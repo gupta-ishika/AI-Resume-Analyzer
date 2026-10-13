@@ -66,3 +66,6 @@ class MatchResultRepository:
                 .order_by(MatchResultModel.rank.asc().nulls_last())
             ).all()
         )
+
+
+MatchingRepository = MatchResultRepository

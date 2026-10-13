@@ -25,3 +25,10 @@ def setup_logging(level: str = "INFO") -> logging.Logger:
 
 
 logger = setup_logging()
+
+
+def get_logger(name: str | None = None) -> logging.Logger:
+    """Returns a child logger or the root resume_analyzer logger."""
+    if name:
+        return logging.getLogger(f"resume_analyzer.{name}")
+    return logger
