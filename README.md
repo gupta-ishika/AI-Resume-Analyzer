@@ -71,16 +71,16 @@ To be completed as the setup tasks finish. Each step below becomes a documented 
 4. Start PostgreSQL, ChromaDB, and Ollama with Docker Compose (`SET-04`).
 5. Run the database migrations (`SET-06`).
 6. Start the worker process (`BG-01`).
-7. Start the Streamlit app (`SET-03`).
+7. Start the React frontend application (`SET-03`).
 8. Run the tests (`SET-05`).
 
 ## Team and Ownership
 
 * **Person 1: Document Intelligence.** Extraction, skill normalization, job description requirements, PII scrubbing, the upload service, the seed dataset, and test and CI setup.
 * **Person 2: Matching, Orchestration and Persistence.** Database, Profile Builder, scoring, ranking, embeddings, ChromaDB, the worker, and the analysis services.
-* **Person 3: Interface and AI.** Streamlit screens, the service interface types, and all LLM work (Ollama, prompts, output validation, explanations).
+* **Person 3: Interface and AI.** FastAPI routes, React UI, the service interface types, and all LLM work (Ollama, prompts, output validation, explanations).
 
-Details and the shared handoffs are in `ARCHITECTURE.md` Section 3 and `MVP-LEAN.md` Section 6.
+Details and the shared handoffs are in `ARCHITECTURE.md` Section 3.
 
 ## Working Agreements
 
@@ -98,15 +98,6 @@ Details and the shared handoffs are in `ARCHITECTURE.md` Section 3 and `MVP-LEAN
 * Logs must not contain resume text or personal information.
 * The MVP runs in a controlled environment. Do not deploy it publicly with real candidate data, and do not expose it without authentication.
 
-## Known Limitations (Lean MVP)
-
-* No public API and no React interface yet.
-* The interface uses Streamlit's default look and is not tuned for mobile or full accessibility.
-* Recovery from rare failures is simpler than in the full design. The finalization retry counter resets when the worker restarts, and expired uploads and orphaned vector collections are not handled automatically.
-* Quality results come from a small seed dataset and are indicative only.
-* Performance is verified only up to 20 resumes and was not benchmarked.
-* Explanation quality was checked manually on a small sample.
-
 ## Roadmap
 
-The order of work is in `TASKS.md`, with the lean scope marked on each task. After the lean MVP, the suggested upgrade path is in `MVP-LEAN.md` Section 12: FastAPI routes, the full watchdog and recovery tests, the orphaned-vector sweep, the full dataset and benchmarks, and then the React frontend.
+The order of work is sequentially tracked across the task phases in [`docs/TASKS.md`](docs/TASKS.md).
