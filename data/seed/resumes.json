@@ -1,0 +1,58 @@
+[
+  {
+    "id": "cand_01",
+    "filename": "alex_morgan_backend.txt",
+    "text": "ALEX MORGAN\nEmail: alex.morgan@example.com | Phone: (555) 019-2834\nEducation: Bachelor of Science in Computer Science, State University\n\nTECHNICAL SKILLS\nPython, FastAPI, Postgres, Docker, Git, REST APIs\n\nPROFESSIONAL EXPERIENCE\nSenior Software Engineer at Acme Corp (2021 - Present, 3.5 years)\n- Architected and built high-performance microservices using Python and FastAPI.\n- Designed relational database schemas and optimized complex SQL queries in PostgreSQL.\n- Deployed containerized applications using Docker on AWS cloud infrastructure.\n\nPROJECTS\nScalable E-Commerce Engine: Built distributed checkout API handling 5,000 req/sec using FastAPI and Postgres.",
+    "expected_status": "SUCCESS",
+    "expected_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "Git", "REST APIs"],
+    "expected_years_experience": 3.5,
+    "fairness_pair_id": "cand_01_pair"
+  },
+  {
+    "id": "cand_01_pair",
+    "filename": "priya_sharma_backend.txt",
+    "text": "PRIYA SHARMA\nEmail: priya.sharma@example.org | Phone: +91 98765 43210\nEducation: B.Tech in Information Technology, National Institute of Technology\n\nSKILLS\nPython, FastAPI, PostgreSQL, Docker, Git, REST APIs\n\nWORK HISTORY\nLead Backend Engineer at Acme Corp (2021 - Present, 3.5 years)\n- Architected and built high-performance microservices using Python and FastAPI.\n- Designed relational database schemas and optimized complex SQL queries in PostgreSQL.\n- Deployed containerized applications using Docker on AWS cloud infrastructure.\n\nPROJECTS\nScalable E-Commerce Engine: Built distributed checkout API handling 5,000 req/sec using FastAPI and Postgres.",
+    "expected_status": "SUCCESS",
+    "expected_skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "Git", "REST APIs"],
+    "expected_years_experience": 3.5,
+    "fairness_pair_id": "cand_01"
+  },
+  {
+    "id": "cand_02",
+    "filename": "jordan_lee_moderate.txt",
+    "text": "JORDAN LEE\nEmail: jordan.lee@example.com\nEducation: Associate Degree in Web Programming\n\nSKILLS\nPython, Django, SQLite, Redis, JavaScript\n\nEXPERIENCE\nBackend Developer at Startup Labs (2022 - 2024, 2 years)\n- Developed internal tools and web apps using Python and Django.\n- Managed caching with Redis.\n- Missing PostgreSQL and FastAPI experience.",
+    "expected_status": "SUCCESS",
+    "expected_skills": ["Python", "Django", "SQLite", "Redis", "JavaScript"],
+    "expected_years_experience": 2.0
+  },
+  {
+    "id": "cand_03_frontend",
+    "filename": "taylor_swift_ui.txt",
+    "text": "TAYLOR REED\nEmail: taylor.reed@example.com\n\nTECHNICAL EXPERTISE\nReact.js, TypeScript, CSS, Tailwind CSS, HTML5, Next.js\n\nPROFESSIONAL SUMMARY\nFrontend Developer with 3 years building responsive user interfaces with React and TypeScript.",
+    "expected_status": "SUCCESS",
+    "expected_skills": ["React", "TypeScript", "CSS", "Tailwind CSS", "HTML5", "Next.js"],
+    "expected_years_experience": 3.0
+  },
+  {
+    "id": "cand_04_mixed_domain",
+    "filename": "sam_rivera_multidomain.txt",
+    "text": "SAM RIVERA\nContact: sam.rivera@example.com\n\nEXPERIENCE\nRestaurant General Manager (2018 - 2021, 3 years)\n- Managed staff and restaurant operations.\n\nJunior Web Developer (2022 - Present, 2 years)\n- Built web forms in JavaScript and Python.\n- Maintained database backups in Postgres.",
+    "expected_status": "SUCCESS",
+    "expected_skills": ["JavaScript", "Python", "PostgreSQL"],
+    "expected_years_experience": 2.0
+  },
+  {
+    "id": "cand_05_scanned_empty",
+    "filename": "scanned_doc_image.pdf",
+    "text": "",
+    "expected_status": "FAILED",
+    "expected_failure_code": "SCANNED_OR_IMAGE_ONLY"
+  },
+  {
+    "id": "cand_06_unreliable_layout",
+    "filename": "unreliable_table_layout.docx",
+    "text": "### UNKNOWN MATRIX ###\n|||| ... [corrupted binary non-text fragments without headings]",
+    "expected_status": "NEEDS_REVIEW",
+    "expected_failure_code": "UNRELIABLE_STRUCTURE"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "job_backend_01",
+    "title": "Senior Backend Engineer",
+    "description": "We are seeking a Senior Backend Engineer with strong expertise in Python, FastAPI, and PostgreSQL. Candidates should have at least 3+ years of experience building scalable backend microservices and APIs. Experience with Docker and AWS is preferred. A Bachelor's degree in Computer Science or a related technical field is required.",
+    "expected_requirements": {
+      "required_skills": ["Python", "FastAPI", "PostgreSQL"],
+      "preferred_skills": ["Docker", "AWS"],
+      "experience_requirements": ["3+ years of experience building scalable backend microservices and APIs"],
+      "education_requirements": ["Bachelor's degree in Computer Science or related technical field"],
+      "explicit_requirements": []
+    }
+  },
+  {
+    "id": "job_frontend_02",
+    "title": "Frontend React Developer",
+    "description": "Looking for a Frontend Developer experienced in React, TypeScript, and modern CSS. At least 2 years of professional frontend experience required. Experience with Tailwind CSS and Next.js is a plus. Bachelor's degree preferred.",
+    "expected_requirements": {
+      "required_skills": ["React", "TypeScript", "CSS"],
+      "preferred_skills": ["Tailwind CSS", "Next.js"],
+      "experience_requirements": ["2+ years of professional frontend experience"],
+      "education_requirements": ["Bachelor's degree preferred"],
+      "explicit_requirements": []
+    }
+  }
+]
