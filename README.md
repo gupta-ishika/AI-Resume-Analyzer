@@ -20,28 +20,39 @@ The system assists the recruiter. It does not make hiring decisions.
 * **Testing & Quality:** pytest, ruff, GitHub Actions CI
 * **Environment:** Docker and Docker Compose
 
-## Repository Layout (Proposed)
+## Documentation
 
-The layout is confirmed in task `SET-01`.
+The project specifications and implementation plans are organized in the `docs/` directory:
+
+* [`docs/PRD.md`](docs/PRD.md): Product requirements, fairness, retention, and matching criteria
+* [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): System architecture, layer boundaries, and ownership
+* [`docs/API.md`](docs/API.md): REST API contracts, status models, and error schemas
+* [`docs/DATABASE.md`](docs/DATABASE.md): PostgreSQL entities, constraints, and relational schemas
+* [`docs/DESIGN.md`](docs/DESIGN.md): Recruiter UI guidelines, design tokens, and components
+* [`docs/RULES.md`](docs/RULES.md): Non-negotiable architectural, fairness, and coding rules
+* [`docs/TASKS.md`](docs/TASKS.md): Step-by-step task breakdown and implementation roadmap
+
+## Repository Layout
 
 ```text
 .
-├── docs/                 project documents listed above
+├── docs/                 project specification documents
 ├── backend/
+│   ├── core/             config, database session, logging, error handling
 │   ├── schemas/          shared Pydantic models
-│   ├── services/         application services, matching, extraction, LLM adapter
-│   ├── repositories/     database access
-│   ├── worker/           background worker loop
-│   └── migrations/       Alembic migrations
-├── ui/                   Streamlit app (display and input only)
-├── tests/
-├── data/                 synthetic evaluation data only
-├── docker-compose.yml
-├── .env.example          placeholder values only
+│   ├── services/         application & extraction services
+│   ├── repositories/     database access & repositories
+│   ├── worker/           Celery background tasks
+│   └── migrations/       Alembic database migrations
+├── ui/                   React + Vite frontend (Tailwind CSS)
+├── tests/                unit and integration test suites
+├── data/                 synthetic evaluation seed datasets
+├── docker-compose.yml    local services (Postgres, Redis, ChromaDB, Ollama)
+├── .env.example          environment configuration template
 └── README.md
 ```
 
-Rules for the layout: all logic lives in `backend/`, and nothing outside `ui/` imports Streamlit.
+All business logic lives in `backend/`, and presentation is decoupled inside `ui/`.
 
 ## Prerequisites
 
