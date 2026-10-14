@@ -15,11 +15,6 @@ export function Header() {
           <p className="text-xs text-text-muted">Recruiter Decision Support System</p>
         </div>
       </div>
-      <div className="flex items-center space-x-3 text-xs text-text-muted">
-        <span className="inline-flex items-center px-2 py-1 rounded bg-bg-secondary text-text-secondary border border-border">
-          Full Specification Mode
-        </span>
-      </div>
     </header>
   );
 }

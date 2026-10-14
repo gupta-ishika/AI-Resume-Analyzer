@@ -1,11 +1,10 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, FolderArchive } from 'lucide-react';
+import { LayoutDashboard, PlusCircle } from 'lucide-react';
 
 export function Sidebar({ currentView, setCurrentView }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'new_analysis', label: 'New Analysis', icon: PlusCircle },
-    { id: 'saved_analyses', label: 'Saved Analyses', icon: FolderArchive },
   ];
 
   return (
