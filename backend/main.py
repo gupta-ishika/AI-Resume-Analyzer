@@ -42,6 +42,10 @@ app.add_middleware(
 app.add_exception_handler(AppError, app_error_handler)  # type: ignore
 app.add_exception_handler(Exception, unhandled_exception_handler)
 
+from backend.api import api_router  # noqa: E402
+
+app.include_router(api_router)
+
 
 @app.get("/api/health", tags=["Health"])
 async def health_check():
@@ -51,3 +55,4 @@ async def health_check():
         "service": settings.PROJECT_NAME,
         "environment": settings.ENVIRONMENT,
     }
+

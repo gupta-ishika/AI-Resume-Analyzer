@@ -17,3 +17,6 @@ class ExplanationResponse(BaseModel):
     state: ExplanationState
     explanation: ExplanationData | None = None
     failure_reason: str | None = None
+
+
+ValidatedExplanation = ExplanationData
