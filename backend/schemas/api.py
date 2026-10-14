@@ -148,6 +148,8 @@ class CandidateMatchingBlock(BaseModel):
 
 class CandidateExplanationBlock(BaseModel):
     state: ExplanationState
+    explanation: ValidatedExplanation | None = None
+    failure_reason: str | None = None
 
 
 class CandidateDetailResponse(BaseModel):

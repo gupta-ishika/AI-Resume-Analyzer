@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
@@ -95,3 +95,25 @@ class ExplanationRepository:
             )
         )
         db.commit()
+
+    @staticmethod
+    def reclaim_stale_generating(db: Session, timeout_seconds: int = 120) -> int:
+        """
+        Transitions stuck GENERATING explanations to FAILED after timeout.
+        """
+        cutoff = datetime.now(UTC) - timedelta(seconds=timeout_seconds)
+        stmt = (
+            update(ExplanationModel)
+            .where(
+                ExplanationModel.state == ExplanationState.GENERATING.value,
+                ExplanationModel.generation_started_at < cutoff,
+            )
+            .values(
+                state=ExplanationState.FAILED.value,
+                failure_reason="EXPLANATION_TIMEOUT",
+                updated_at=datetime.now(UTC),
+            )
+        )
+        res = db.execute(stmt)
+        db.commit()
+        return res.rowcount or 0

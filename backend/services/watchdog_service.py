@@ -226,4 +226,11 @@ class WatchdogService:
         stats["orphaned_files_removed"] = CleanupService.cleanup_orphaned_temporary_files(db)
         stats["pending_deletions_swept"] = CleanupService.sweep_pending_deletions(db)
 
+        # 5. Reclaim stale generating explanations
+        from backend.repositories.explanation_repo import ExplanationRepository
+
+        stats["stale_explanations_reclaimed"] = ExplanationRepository.reclaim_stale_generating(
+            db, timeout_seconds=settings.EXPLANATION_TIMEOUT_SECONDS
+        )
+
         return stats

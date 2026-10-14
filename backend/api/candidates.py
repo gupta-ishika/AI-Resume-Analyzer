@@ -16,7 +16,9 @@ from backend.schemas.api import (
     CandidateListResponse,
     CandidateMatchingBlock,
     ExcludedFileItem,
+    ExplanationResponse,
     RankedCandidateItem,
+    ValidatedExplanation,
 )
 from backend.schemas.candidate import (
     CandidateContact,
@@ -36,6 +38,7 @@ from backend.schemas.matching import (
     ScoreBreakdown,
     SkillMatchEvidence,
 )
+from backend.services.explanation_service import ExplanationService
 
 router = APIRouter(prefix="/analyses/{analysis_id}/candidates", tags=["Candidates"])
 
@@ -183,7 +186,23 @@ def get_candidate_detail(
     )
 
     # 4. Explanation Block
-    explanation_block = CandidateExplanationBlock(state=expl_state)
+    expl_data = None
+    expl_failure_reason = None
+    if explanation_model:
+        expl_failure_reason = explanation_model.failure_reason
+        if expl_state == ExplanationState.READY and explanation_model.explanation_content:
+            try:
+                expl_data = ValidatedExplanation.model_validate(
+                    explanation_model.explanation_content
+                )
+            except Exception:
+                pass
+
+    explanation_block = CandidateExplanationBlock(
+        state=expl_state,
+        explanation=expl_data,
+        failure_reason=expl_failure_reason,
+    )
 
     return CandidateDetailResponse(
         candidate_id=candidate.id,
@@ -194,3 +213,30 @@ def get_candidate_detail(
         matching=matching_block,
         explanation=explanation_block,
     )
+
+
+@router.post("/{candidate_id}/explanation", response_model=ExplanationResponse)
+def request_explanation(
+    analysis_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Requests AI-generated explanation for a candidate (LLM-03, LLM-04).
+    Only allowed when analysis is in RANKED status.
+    Transitions state to GENERATING and enqueues on explanation_queue.
+    Returns existing state if already GENERATING or READY (no regeneration in MVP).
+    """
+    return ExplanationService.request_explanation(db, analysis_id, candidate_id)
+
+
+@router.get("/{candidate_id}/explanation", response_model=ExplanationResponse)
+def get_explanation(
+    analysis_id: str,
+    candidate_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieves current explanation state and validated content (LLM-04).
+    """
+    return ExplanationService.get_explanation(db, analysis_id, candidate_id)

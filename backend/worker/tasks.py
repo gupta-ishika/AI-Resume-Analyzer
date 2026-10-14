@@ -189,3 +189,26 @@ def periodic_watchdog_task() -> dict[str, int]:
         return WatchdogService.run_watchdog_cycle(db)
     finally:
         db.close()
+
+
+@celery_app.task(
+    name="backend.worker.tasks.generate_explanation_task",
+    queue="explanation_queue",
+    max_retries=1,
+    default_retry_delay=5,
+)
+def generate_explanation_task(analysis_id: str, candidate_id: str) -> dict[str, str]:
+    """
+    Asynchronous Celery task processing candidate explanation on explanation_queue.
+    """
+    db = SessionLocal()
+    try:
+        from backend.services.explanation_service import ExplanationService
+
+        ExplanationService.generate_and_save_explanation(db, analysis_id, candidate_id)
+        return {"status": "completed", "candidate_id": candidate_id}
+    except Exception as exc:
+        logger.error(f"Error in generate_explanation_task for candidate {candidate_id}: {exc}")
+        return {"status": "failed", "candidate_id": candidate_id, "error": str(exc)}
+    finally:
+        db.close()
