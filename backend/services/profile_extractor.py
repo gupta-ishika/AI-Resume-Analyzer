@@ -175,3 +175,6 @@ class ProfileExtractor:
             )
 
         return items
+
+    extract_profile = extract_candidate
+

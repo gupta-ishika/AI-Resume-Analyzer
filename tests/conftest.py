@@ -18,6 +18,20 @@ test_engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
+# Route SessionLocal to test database during testing
+import backend.core.database as core_db  # noqa: E402
+import backend.worker.tasks as worker_tasks  # noqa: E402
+from backend.worker.celery_app import celery_app  # noqa: E402
+
+core_db.SessionLocal = TestingSessionLocal
+worker_tasks.SessionLocal = TestingSessionLocal
+
+# Enable synchronous eager execution for Celery during tests
+celery_app.conf.update(
+    task_always_eager=True,
+    task_eager_propagates=True,
+)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():

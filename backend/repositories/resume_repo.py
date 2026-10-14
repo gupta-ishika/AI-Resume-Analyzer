@@ -197,3 +197,123 @@ class ResumeRepository:
         result = db.execute(stmt)
         db.commit()
         return result.rowcount > 0
+
+    @staticmethod
+    def list_accepted(db: Session, analysis_id: str) -> list[ResumeModel]:
+        """Lists all accepted resumes (excluding DUPLICATE and REJECTED) for an analysis."""
+        return list(
+            db.scalars(
+                select(ResumeModel)
+                .where(
+                    ResumeModel.analysis_id == analysis_id,
+                    ResumeModel.status.notin_([
+                        ResumeStatus.DUPLICATE.value,
+                        ResumeStatus.REJECTED.value,
+                    ]),
+                )
+                .order_by(ResumeModel.created_at.asc())
+            ).all()
+        )
+
+    @staticmethod
+    def list_by_status(db: Session, analysis_id: str, status: str) -> list[ResumeModel]:
+        return list(
+            db.scalars(
+                select(ResumeModel)
+                .where(
+                    ResumeModel.analysis_id == analysis_id,
+                    ResumeModel.status == status,
+                )
+                .order_by(ResumeModel.created_at.asc())
+            ).all()
+        )
+
+    @staticmethod
+    def list_stale_processing(db: Session, max_age_seconds: int) -> list[ResumeModel]:
+        """Finds resumes that have been in PROCESSING status longer than max_age_seconds."""
+        cutoff = datetime.now(UTC)
+        # Fetch processing resumes
+        resumes = list(
+            db.scalars(
+                select(ResumeModel).where(
+                    ResumeModel.status == ResumeStatus.PROCESSING.value,
+                    ResumeModel.processing_started_at.is_not(None),
+                )
+            ).all()
+        )
+        stale: list[ResumeModel] = []
+        for r in resumes:
+            if r.processing_started_at:
+                delta = (cutoff - r.processing_started_at.replace(tzinfo=UTC)).total_seconds()
+                if delta > max_age_seconds:
+                    stale.append(r)
+        return stale
+
+    @staticmethod
+    def list_unclaimed_ready(db: Session, max_age_seconds: int) -> list[ResumeModel]:
+        """Finds READY resumes in PROCESSING analyses that have sat unclaimed."""
+        cutoff = datetime.now(UTC)
+        resumes = list(
+            db.scalars(
+                select(ResumeModel)
+                .join(AnalysisModel, ResumeModel.analysis_id == AnalysisModel.id)
+                .where(
+                    ResumeModel.status == ResumeStatus.READY.value,
+                    AnalysisModel.status == "PROCESSING",
+                    AnalysisModel.deletion_requested_at.is_(None),
+                )
+            ).all()
+        )
+        unclaimed: list[ResumeModel] = []
+        for r in resumes:
+            if r.created_at:
+                delta = (cutoff - r.created_at.replace(tzinfo=UTC)).total_seconds()
+                if delta > max_age_seconds:
+                    unclaimed.append(r)
+        return unclaimed
+
+    @staticmethod
+    def list_expired_pending(db: Session, max_age_hours: int = 24) -> list[ResumeModel]:
+        """Finds resumes in REQUIREMENTS_PENDING analyses exceeding max_age_hours retention."""
+        cutoff = datetime.now(UTC)
+        resumes = list(
+            db.scalars(
+                select(ResumeModel)
+                .join(AnalysisModel, ResumeModel.analysis_id == AnalysisModel.id)
+                .where(
+                    ResumeModel.status == ResumeStatus.READY.value,
+                    AnalysisModel.status == "REQUIREMENTS_PENDING",
+                    AnalysisModel.deletion_requested_at.is_(None),
+                )
+            ).all()
+        )
+        expired: list[ResumeModel] = []
+        for r in resumes:
+            if r.created_at:
+                delta_hours = (
+                    cutoff - r.created_at.replace(tzinfo=UTC)
+                ).total_seconds() / 3600.0
+                if delta_hours > max_age_hours:
+                    expired.append(r)
+        return expired
+
+    @staticmethod
+    def reset_to_ready_with_retry(db: Session, resume_id: str) -> bool:
+        """Resets a stale PROCESSING resume to READY and increments retry count."""
+        stmt = (
+            update(ResumeModel)
+            .where(
+                ResumeModel.id == resume_id,
+                ResumeModel.status == ResumeStatus.PROCESSING.value,
+            )
+            .values(
+                status=ResumeStatus.READY.value,
+                retry_count=ResumeModel.retry_count + 1,
+                processing_started_at=None,
+                updated_at=datetime.now(UTC),
+            )
+        )
+        result = db.execute(stmt)
+        db.commit()
+        return result.rowcount > 0
+

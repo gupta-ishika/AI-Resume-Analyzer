@@ -123,3 +123,45 @@ class AnalysisService:
                 "NO_READY_RESUMES",
                 "At least one accepted resume in READY status is required to start analysis.",
             )
+
+    @classmethod
+    def start_analysis(cls, db: Session, analysis_id: str) -> list[str]:
+        """
+        Executes BG-04:
+        1. Validates preconditions (REQUIREMENTS_PENDING, confirmed requirements, >=1 READY resume).
+        2. Atomically transitions status to PROCESSING (returns conflict on race condition).
+        3. Enqueues one process_resume_task per READY resume.
+        4. Returns list of enqueued task IDs.
+        """
+        cls.validate_ready_for_start(db, analysis_id)
+
+        # Transition status atomically
+        transitioned = AnalysisRepository.update_status_conditional(
+            db,
+            analysis_id,
+            from_status=AnalysisStatus.REQUIREMENTS_PENDING.value,
+            to_status=AnalysisStatus.PROCESSING.value,
+        )
+        if not transitioned:
+            raise ConflictError(
+                "ANALYSIS_ALREADY_STARTED",
+                "Analysis has already started or status changed concurrently.",
+            )
+
+        ready_resumes = ResumeRepository.list_by_status(
+            db, analysis_id, ResumeStatus.READY.value
+        )
+
+        task_ids: list[str] = []
+        from backend.worker.tasks import process_resume_task
+
+        for r in ready_resumes:
+            try:
+                task = process_resume_task.delay(analysis_id, r.id)
+                task_ids.append(task.id)
+            except Exception:
+                # If broker is offline / synchronous, task will be recovered by watchdog
+                task_ids.append(f"pending-{r.id}")
+
+        return task_ids
+

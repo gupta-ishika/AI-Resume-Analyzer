@@ -14,7 +14,27 @@ from backend.schemas.extraction import (
 class DocumentLoaderService:
     """Service to safely extract raw text from PDF and DOCX documents."""
 
-    SUPPORTED_EXTENSIONS = {".pdf", ".docx"}
+    SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+
+    @classmethod
+    def load_file(cls, file_path: str | Path) -> ExtractionOutcome:
+        """Reads a file path and extracts its raw text."""
+        path = Path(file_path)
+        if not path.exists():
+            return ExtractionOutcome(
+                status=ExtractionStatus.FAILED,
+                failure_code=ExtractionFailureCode.CORRUPTED_FILE,
+                failure_message=f"File '{path.name}' does not exist on disk.",
+            )
+        try:
+            content = path.read_bytes()
+            return cls.extract_text_from_bytes(content, path.name)
+        except Exception as e:
+            return ExtractionOutcome(
+                status=ExtractionStatus.FAILED,
+                failure_code=ExtractionFailureCode.CORRUPTED_FILE,
+                failure_message=f"Error reading file '{path.name}': {str(e)}",
+            )
 
     @classmethod
     def extract_text_from_bytes(cls, content: bytes, filename: str) -> ExtractionOutcome:
@@ -26,7 +46,7 @@ class DocumentLoaderService:
                 status=ExtractionStatus.FAILED,
                 failure_code=ExtractionFailureCode.UNSUPPORTED_FORMAT,
                 failure_message=(
-                    f"Unsupported file extension '{ext}'. Only PDF and DOCX are supported."
+                    f"Unsupported file extension '{ext}'. Only PDF, DOCX, and TXT are supported."
                 ),
             )
 
@@ -42,6 +62,18 @@ class DocumentLoaderService:
                 return cls._extract_pdf(content)
             elif ext == ".docx":
                 return cls._extract_docx(content)
+            elif ext == ".txt":
+                text = content.decode("utf-8", errors="replace").strip()
+                if not text:
+                    return ExtractionOutcome(
+                        status=ExtractionStatus.FAILED,
+                        failure_code=ExtractionFailureCode.EMPTY_DOCUMENT,
+                        failure_message="The uploaded text document contains no text.",
+                    )
+                return ExtractionOutcome(
+                    status=ExtractionStatus.SUCCESS,
+                    raw_text=text,
+                )
         except Exception as e:
             return ExtractionOutcome(
                 status=ExtractionStatus.FAILED,
@@ -112,3 +144,7 @@ class DocumentLoaderService:
                 failure_code=ExtractionFailureCode.CORRUPTED_FILE,
                 failure_message=f"Corrupted or invalid DOCX file: {str(e)}",
             )
+
+
+DocumentLoader = DocumentLoaderService
+
