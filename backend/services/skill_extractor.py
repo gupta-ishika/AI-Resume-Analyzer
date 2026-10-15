@@ -17,6 +17,9 @@ class SkillExtractor:
         "PostgreSQL": ["SQL"],
         "SQLite": ["SQL"],
         "MySQL": ["SQL"],
+        "MariaDB": ["SQL"],
+        "Oracle Database": ["SQL"],
+        "Microsoft SQL Server": ["SQL"],
     }
 
     _processor: KeywordProcessor | None = None
@@ -45,20 +48,35 @@ class SkillExtractor:
 
         cls._alias_map = {}
 
-        # Terms with <=2 characters that require case-sensitive matching to avoid false positives
-        case_sensitive_terms = {"Go", "C", "R"}
+        # Short acronyms/languages that require case-sensitive matching to avoid false positives
+        case_sensitive_aliases: dict[str, str] = {
+            "Go": "Go",
+            "C": "C",
+            "R": "R",
+            "JS": "JavaScript",
+            "TS": "TypeScript",
+            "AI": "Artificial Intelligence",
+            "ML": "Machine Learning",
+            "DL": "Deep Learning",
+            "NLP": "Natural Language Processing",
+            "CV": "Computer Vision",
+            "LLM": "Large Language Models",
+            "LLMs": "Large Language Models",
+        }
+
+        for token, canonical in case_sensitive_aliases.items():
+            cls._short_word_processor.add_keyword(token, canonical)
+            cls._alias_map[token.lower()] = canonical
 
         for canonical, aliases in taxonomy.items():
             cls._alias_map[canonical.lower()] = canonical
 
-            if canonical in case_sensitive_terms:
-                cls._short_word_processor.add_keyword(canonical, canonical)
-            else:
+            if canonical not in case_sensitive_aliases:
                 cls._processor.add_keyword(canonical, canonical)
 
             for alias in aliases:
                 cls._alias_map[alias.lower()] = canonical
-                if alias in case_sensitive_terms:
+                if alias in case_sensitive_aliases:
                     cls._short_word_processor.add_keyword(alias, canonical)
                 else:
                     cls._processor.add_keyword(alias, canonical)
