@@ -66,47 +66,96 @@ class ProfileExtractor:
             contact=CandidateContact(email=email, phone=phone),
         )
 
+    DATE_RANGE_REGEX = (
+        r"\(?(\b(?:19|20)\d{2}\b\s*(?:-|–|to)\s*(?:\b(?:19|20)\d{2}\b|present|current|now))\)?"
+    )
+
     @classmethod
     def _extract_experience(cls, exp_text: str) -> list[ExperienceItem]:
         if not exp_text:
             return []
 
+        lines = [line.strip() for line in exp_text.split("\n") if line.strip()]
         items: list[ExperienceItem] = []
-        # Split on blocks separated by blank lines or bullet points
-        blocks = [b.strip() for b in exp_text.split("\n\n") if b.strip()]
-        if not blocks:
-            blocks = [exp_text]
+        curr_job: ExperienceItem | None = None
+        current_year = 2026
 
-        for block in blocks:
-            lines = [line.strip() for line in block.split("\n") if line.strip()]
-            if not lines:
-                continue
+        for line in lines:
+            d_match = re.search(cls.DATE_RANGE_REGEX, line, re.IGNORECASE)
+            is_bullet = line.startswith(("-", "•", "*", "\x7f"))
+            is_header = bool(d_match) or (not is_bullet and ("|" in line))
 
-            header_line = lines[0]
-            # Try to extract title, company, duration
-            years = 0.0
-            years_match = re.search(cls.YEARS_EXP_REGEX, block, re.IGNORECASE)
-            if years_match:
-                try:
-                    years = float(years_match.group(1))
-                except ValueError:
-                    years = 0.0
+            if is_header:
+                if curr_job:
+                    items.append(curr_job)
 
-            responsibilities = [
-                resp_line.lstrip("-•* ").strip()
-                for resp_line in lines[1:]
-                if resp_line.startswith(("-", "•", "*")) or len(resp_line) > 20
-            ]
+                duration = d_match.group(1) if d_match else None
+                years = 0.0
+                if d_match:
+                    parts = re.findall(
+                        r"\b(?:19|20)\d{2}\b|present|current|now", d_match.group(1), re.IGNORECASE
+                    )
+                    if len(parts) >= 2:
+                        s_yr = int(parts[0])
+                        e_yr = current_year if parts[1].lower() in ("present", "current", "now") else int(parts[1])
+                        years = max(0.5, float(e_yr - s_yr))
+                else:
+                    y_match = re.search(cls.YEARS_EXP_REGEX, line, re.IGNORECASE)
+                    if y_match:
+                        try:
+                            years = float(y_match.group(1))
+                        except ValueError:
+                            years = 0.0
 
-            items.append(
-                ExperienceItem(
-                    title=header_line[:100],
-                    company=None,
-                    duration=None,
+                clean_title = re.sub(cls.DATE_RANGE_REGEX, "", line).strip(" ()|")
+                company = None
+                if "|" in clean_title:
+                    parts = clean_title.split("|", 1)
+                    clean_title = parts[0].strip()
+                    company = re.sub(cls.DATE_RANGE_REGEX, "", parts[1]).strip(" ()|")
+
+                curr_job = ExperienceItem(
+                    title=clean_title[:100],
+                    company=company[:100] if company else None,
+                    duration=duration,
                     years=years,
-                    responsibilities=responsibilities,
+                    responsibilities=[],
                 )
-            )
+            elif curr_job:
+                clean_resp = line.lstrip("-•*\x7f ").strip()
+                if len(clean_resp) > 10:
+                    curr_job.responsibilities.append(clean_resp)
+
+        if curr_job:
+            items.append(curr_job)
+
+        # Fallback to block splitting if line scanning did not identify items
+        if not items:
+            blocks = [b.strip() for b in exp_text.split("\n\n") if b.strip()]
+            for block in blocks:
+                b_lines = [l.strip() for l in block.split("\n") if l.strip()]
+                if not b_lines:
+                    continue
+                years = 0.0
+                y_match = re.search(cls.YEARS_EXP_REGEX, block, re.IGNORECASE)
+                if y_match:
+                    try:
+                        years = float(y_match.group(1))
+                    except ValueError:
+                        years = 0.0
+                items.append(
+                    ExperienceItem(
+                        title=b_lines[0][:100],
+                        company=None,
+                        duration=None,
+                        years=years,
+                        responsibilities=[
+                            l.lstrip("-•* ").strip()
+                            for l in b_lines[1:]
+                            if l.startswith(("-", "•", "*")) or len(l) > 20
+                        ],
+                    )
+                )
 
         return items
 
